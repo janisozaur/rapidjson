@@ -1513,7 +1513,8 @@ public:
         MemberIterator pos = MemberBegin() + (first - MemberBegin());
         for (MemberIterator itr = pos; itr != last; ++itr)
             itr->~Member();
-        std::memmove(&*pos, &*last, static_cast<size_t>(MemberEnd() - last) * sizeof(Member));
+        // Hack: This is moving non-POD structures and should rather use copy-assignment instead.
+        std::memmove(reinterpret_cast<void *>(&*pos), reinterpret_cast<const void *>(&*last), static_cast<size_t>(MemberEnd() - last) * sizeof(Member));
         data_.o.size -= static_cast<SizeType>(last - first);
         return pos;
     }
@@ -1716,8 +1717,9 @@ public:
         RAPIDJSON_ASSERT(last <= End());
         ValueIterator pos = Begin() + (first - Begin());
         for (ValueIterator itr = pos; itr != last; ++itr)
-            itr->~GenericValue();       
-        std::memmove(pos, last, static_cast<size_t>(End() - last) * sizeof(GenericValue));
+            itr->~GenericValue();
+        // Hack: This is moving non-POD structures and should rather use copy-assignment instead.
+        std::memmove(reinterpret_cast<void *>(pos), reinterpret_cast<const void *>(last), static_cast<size_t>(End() - last) * sizeof(GenericValue));
         data_.a.size -= static_cast<SizeType>(last - first);
         return pos;
     }
